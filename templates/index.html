@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireless Network Design Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .scenario {
+            display: none;
+        }
+
+        .scenario.active {
+            display: block;
+        }
+
+        .form-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .calculate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results h3 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .result-value {
+            font-size: 1.1em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .ai-explanation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .ai-explanation h4 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-section {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Wireless Network Design Tool</h1>
+            <p>AI-Powered Calculations for Wireless and Mobile Networks</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showScenario('link-budget', this)">Link Budget</button>
+            <button class="tab" onclick="showScenario('wireless-system', this)">Wireless System</button>
+            <button class="tab" onclick="showScenario('ofdm', this)">OFDM Systems</button>
+            <button class="tab" onclick="showScenario('cellular', this)">Cellular Design</button>
+        </div>
+
+<div class="content">
+    <!-- Link Budget Scenario -->
+    <div id="link-budget" class="scenario active">
+        <h2>📡 Link Budget Calculation</h2>
+        <p>Calculate required transmit and receive power using enhanced link budget formulas.</p>
+
+        <div class="form-section">
+            <div>
+                <div class="form-group">
+                    <label for="lb-tx-gain">TX Antenna Gain (GT) - dBi</label>
+                    <input type="number" id="lb-tx-gain" value="12" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="lb-rx-gain">RX Antenna Gain (GR) - dBi</label>
+                    <input type="number" id="lb-rx-gain" value="12" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="lb-rx-amp-gain">RX Amplifier Gain (AR) - dB</label>
+                    <input type="number" id="lb-rx-amp-gain" value="0" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="lb-feed-line-loss">Feed Line Loss (Lf) - dB</label>
+                    <input type="number" id="lb-feed-line-loss" value="0" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="lb-other-losses">Other Losses (Lo) - dB</label>
+                    <input type="number" id="lb-other-losses" value="0" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="lb-fade-margin">Fade Margin (dB)</label>
+                    <input type="number" id="lb-fade-margin" value="3" step="0.1">
+                </div>
+            </div>
+
+            <div>
+                <div class="form-group">
+                    <label for="lb-frequency">Frequency - Hz</label>
+                    <input type="number" id="lb-frequency" value="2400000000" step="1000000">
+                </div>
+                <div class="form-group">
+                    <label for="lb-distance">Distance - m</label>
+                    <input type="number" id="lb-distance" value="10" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="lb-ebn0">Eb/N0 (dB)</label>
+                    <input type="number" id="lb-ebn0" value="10" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="lb-noise-figure">Noise Figure (NF) - dB</label>
+                    <input type="number" id="lb-noise-figure" value="5" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="lb-bandwidth">Bandwidth - Hz</label>
+                    <input type="number" id="lb-bandwidth" value="10000000">
+                </div>
+                <div class="form-group">
+                    <label for="lb-margin">Desired Link Margin (dB)</label>
+                    <input type="number" id="lb-margin" value="10" step="0.1">
+                </div>
+            </div>
+        </div>
+
+        <button class="calculate-btn" onclick="calculateLinkBudget()">Calculate Link Budget</button>
+        <div id="lb-results" class="results"></div>
+    </div>
+</div>
+
+
+            <!-- Wireless System Scenario -->
+            <div id="wireless-system" class="scenario">
+    <h2>📶 Wireless Communication System</h2>
+    <p>Calculate data rates through sampling, quantization, encoding, formatting stages, and overhead.</p>
+
+    <div class="form-section">
+        <div>
+            <div class="form-group">
+                <label for="ws-sampling-rate">Sampling Rate - Hz</label>
+                <input type="number" id="ws-sampling-rate" value="8000">
+            </div>
+            <div class="form-group">
+                <label for="ws-quantization-bits">Quantization Bits</label>
+                <input type="number" id="ws-quantization-bits" value="8" min="1" max="16">
+            </div>
+        </div>
+        <div>
+            <div class="form-group">
+                <label for="ws-source-coding">Source Coding Rate</label>
+                <input type="number" id="ws-source-coding" value="0.5" step="0.01" min="0.1" max="1">
+            </div>
+            <div class="form-group">
+                <label for="ws-channel-coding">Channel Coding Rate</label>
+                <input type="number" id="ws-channel-coding" value="0.75" step="0.01" min="0.1" max="1">
+            </div>
+        </div>
+        <div>
+            <div class="form-group">
+                <label for="ws-overhead">Overhead Percentage (%)</label>
+                <input type="number" id="ws-overhead" value="20" step="1" min="0" max="100">
+            </div>
+        </div>
+    </div>
+
+    <button class="calculate-btn" onclick="calculateWirelessSystem()">Calculate System Rates</button>
+
+    <div id="ws-results" class="results"></div>
+</div>
+
+<!-- OFDM Scenario -->
+<div id="ofdm" class="scenario">
+    <h2>📊 OFDM Systems</h2>
+    <p>Calculate data rates for resource elements, OFDM symbols, resource blocks, maximum transmission capacity using parallel resource blocks, and spectral efficiency.</p>
+
+    <div class="form-section">
+        <div>
+            <div class="form-group">
+                <label for="ofdm-bandwidth">Channel Bandwidth (BW) - Hz</label>
+                <input type="number" id="ofdm-bandwidth" value="1800000" step="1000" min="1000">
+            </div>
+            <div class="form-group">
+                <label for="ofdm-rb-bw">Resource‑Block Bandwidth (RB_BW) - Hz</label>
+                <input type="number" id="ofdm-rb-bw" value="180000" step="1000" min="1000">
+            </div>
+            <div class="form-group">
+                <label for="ofdm-subcarrier">Subcarrier Spacing (Δf) - Hz</label>
+                <input type="number" id="ofdm-subcarrier" value="15000" step="1" min="1">
+            </div>
+            <div class="form-group">
+                <label for="ofdm-guard-time">Guard Time (T<sub>G</sub>) - seconds</label>
+                <input type="number" id="ofdm-guard-time" value="0.00001667" step="0.00000001" min="0">
+            </div>
+        </div>
+        <div>
+            <div class="form-group">
+                <label for="ofdm-modulation">Modulation Order (M)</label>
+                <select id="ofdm-modulation">
+                    <option value="2">BPSK (2)</option>
+                    <option value="4" selected>QPSK (4)</option>
+                    <option value="16">16‑QAM (16)</option>
+                    <option value="64">64‑QAM (64)</option>
+                    <option value="256">256‑QAM (256)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="ofdm-coding-rate">Coding Rate (R)</label>
+                <input type="number" id="ofdm-coding-rate" value="0.5" step="0.01" min="0.1" max="1">
+            </div>
+            <div class="form-group">
+                <label for="ofdm-symbols">Number of OFDM Symbols (per slot)</label>
+                <input type="number" id="ofdm-symbols" value="7" step="1" min="1">
+            </div>
+        </div>
+    </div>
+
+    <button class="calculate-btn" onclick="calculateOFDM()">Calculate OFDM Parameters</button>
+
+    <div id="ofdm-results" class="results"></div>
+</div>
+
+
+
+            </div>
+
+ <!-- Updated Cellular Design Section (in KM²) -->
+<div id="cellular" class="scenario">
+    <h2>📡 Cellular System Capacity Calculator</h2>
+    <p>Compute system capacity using km² units and Erlang B assumptions.</p>
+
+    <div class="form-section">
+        <div>
+            <div class="form-group">
+                <label for="cell-area">City Area (km²)</label>
+                <input type="number" id="cell-area" value="3367">
+            </div>
+            <div class="form-group">
+                <label for="cell-radius">Cell Radius (km)</label>
+                <input type="number" id="cell-radius" value="6.44">
+            </div>
+            <div class="form-group">
+                <label for="cell-reuse">Reuse Pattern (N)</label>
+                <input type="number" id="cell-reuse" value="7">
+            </div>
+        </div>
+        <div>
+            <div class="form-group">
+                <label for="cell-spectrum">Total Spectrum (MHz)</label>
+                <input type="number" id="cell-spectrum" value="40">
+            </div>
+            <div class="form-group">
+                <label for="channel-bandwidth">Channel Bandwidth (kHz)</label>
+                <input type="number" id="channel-bandwidth" value="60">
+            </div>
+            <div class="form-group">
+                <label for="gos">GOS (Grade of Service) %</label>
+                <input type="number" id="gos" value="2">
+            </div>
+            <div class="form-group">
+                <label for="traffic-user">Traffic per User (Erlangs)</label>
+                <input type="number" id="traffic-user" value="0.03" step="0.01">
+            </div>
+        </div>
+    </div>
+
+    <button class="calculate-btn" onclick="calculateCellularCapacity()">Compute Cellular Capacity</button>
+
+    <div id="cellular-results" class="results"></div>
+</div>
+
+
+    <script>
+        function showScenario(scenarioId, element) {
+            // Hide all scenarios
+            const scenarios = document.querySelectorAll('.scenario');
+            scenarios.forEach(scenario => {
+                scenario.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected scenario
+            document.getElementById(scenarioId).classList.add('active');
+
+            // Add active class to clicked tab
+            element.classList.add('active');
+        }
+
+        function showLoading(resultsId) {
+            const resultsDiv = document.getElementById(resultsId);
+            resultsDiv.innerHTML = '<div class="loading">🔄 Calculating...</div>';
+            resultsDiv.classList.add('show');
+        }
+
+        function showError(resultsId, message) {
+            const resultsDiv = document.getElementById(resultsId);
+            resultsDiv.innerHTML = `<div class="error">❌ Error: ${message}</div>`;
+            resultsDiv.classList.add('show');
+        }
+
+        // Function to get the appropriate unit for each parameter
+        function getUnit(key) {
+    const units = {
+        // Frequency/Bandwidth
+        'bandwidth': 'Hz',
+        'frequency': 'Hz',
+        'subcarrier_spacing': 'Hz',
+        'channel_bandwidth': 'Hz',
+        'rb_bandwidth': 'Hz',
+        'sampling_rate': 'Hz',
+
+        // Power
+        'power': 'dBm',
+        'eirp': 'dBm',
+        'received_power': 'dBm',
+        'noise_power': 'dBm',
+        'tx_power': 'dBm',
+        'rx_power': 'dBm',
+
+        // Time
+        'delay': 's',
+        'time': 's',
+        'duration': 's',
+        'symbol_duration': 's',
+        'guard_time': 's',
+        'symbol_duration_ms': 'ms',
+        'guard_time_ms': 'ms',
+        'total_symbol_duration': 'seconds',
+
+        // Distance
+        'distance': 'm',
+        'range': 'm',
+        'altitude': 'm',
+        'height': 'm',
+
+        // Data rates
+        'data_rate': 'bps',
+        'bit_rate': 'bps',
+        'capacity': 'Mbps',
+        'total_capacity': 'Mbps',
+        're_data_rate': 'bps',
+        'ofdm_symbol_data_rate': 'bps',
+        'rb_data_rate': 'bps',
+        'rb_data_rate_mbps': 'Mbps',
+        'quantization_rate': 'bps',
+        'source_encoder_rate': 'bps',
+        'channel_encoder_rate': 'bps',
+        'interleaver_rate': 'bps',
+        'burst_format_rate': 'bps',
+
+        // Efficiency/Ratios
+        'spectral_efficiency': 'bps/Hz',
+        'efficiency': '%',
+        'snr': 'dB',
+        'cnr': 'dB',
+        'link_margin': 'dB',
+        'path_loss': 'dB',
+        'loss': 'dB',
+        'gain': 'dB',
+        'coding_rate': '',
+
+        // Cellular/Network
+        'num_cells': 'cells',
+        'cell_area': 'km²',
+        'users_per_cell': 'users',
+        'traffic_per_cell': 'Erlang',
+        'channels_per_cell': 'channels',
+        'total_channels': 'channels',
+        'system_capacity': 'users',
+        'frequency_reuse_factor': '',
+
+        // Counts (dimensionless)
+        'num_rb': '',
+        'subcarriers_per_rb': '',
+        're_per_rb': '',
+        'total_res_elements': '',
+        'bits_per_re': '',
+        'modulation_order': '',
+        'symbols': '',
+        'num_symbols': ''
+    };
+
+    return units[key] || '';
+}
+
+ async function calculateLinkBudget() {
+    showLoading('lb-results');
+
+    const tx_gain = parseFloat(document.getElementById('lb-tx-gain').value);
+    const rx_gain = parseFloat(document.getElementById('lb-rx-gain').value);
+    const rx_amp_gain = parseFloat(document.getElementById('lb-rx-amp-gain').value);
+    const feed_line_loss = parseFloat(document.getElementById('lb-feed-line-loss').value);
+    const other_losses = parseFloat(document.getElementById('lb-other-losses').value);
+    const fade_margin = parseFloat(document.getElementById('lb-fade-margin').value);
+    const frequency = parseFloat(document.getElementById('lb-frequency').value);
+    const distance = parseFloat(document.getElementById('lb-distance').value);
+    const eb_n0 = parseFloat(document.getElementById('lb-ebn0').value);
+    const noise_figure = parseFloat(document.getElementById('lb-noise-figure').value);
+    const bandwidth_hz = parseFloat(document.getElementById('lb-bandwidth').value);
+    const desired_margin = parseFloat(document.getElementById('lb-margin').value);
+
+    try {
+        const response = await fetch('/api/link-budget', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                tx_gain,
+                rx_gain,
+                rx_amp_gain,
+                feed_line_loss,
+                other_losses,
+                fade_margin,
+                frequency,
+                distance,
+                eb_n0,
+                noise_figure,
+                bandwidth_hz,
+                desired_margin
+            }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            displayResults('lb-results', data);
+        } else {
+            showError('lb-results', data.error || 'An unknown error occurred.');
+        }
+    } catch (error) {
+        showError('lb-results', 'Network error or server unreachable: ' + error.message);
+    }
+}
+
+        async function calculateWirelessSystem() {
+            showLoading('ws-results');
+            const sampling_rate = parseFloat(document.getElementById('ws-sampling-rate').value);
+            const quantization_bits = parseInt(document.getElementById('ws-quantization-bits').value);
+            const source_coding_rate = parseFloat(document.getElementById('ws-source-coding').value);
+            const channel_coding_rate = parseFloat(document.getElementById('ws-channel-coding').value);
+
+            try {
+                const response = await fetch('/api/wireless-system', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ sampling_rate, quantization_bits, source_coding_rate, channel_coding_rate }),
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResults('ws-results', data);
+                } else {
+                    showError('ws-results', data.error || 'An unknown error occurred.');
+                }
+            } catch (error) {
+                showError('ws-results', 'Network error or server unreachable: ' + error.message);
+            }
+        }
+
+async function calculateOFDM() {
+    showLoading('ofdm-results');
+
+    const channel_bandwidth = parseFloat(document.getElementById('ofdm-bandwidth').value);
+    const rb_bandwidth = parseFloat(document.getElementById('ofdm-rb-bw').value);
+    const subcarrier_spacing = parseFloat(document.getElementById('ofdm-subcarrier').value);
+    const guard_time = parseFloat(document.getElementById('ofdm-guard-time').value);
+    const modulation_order = parseInt(document.getElementById('ofdm-modulation').value);
+    const coding_rate = parseFloat(document.getElementById('ofdm-coding-rate').value);
+    const num_symbols = parseInt(document.getElementById('ofdm-symbols').value);
+
+    try {
+        const response = await fetch('/api/ofdm', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                channel_bandwidth,
+                rb_bandwidth,
+                subcarrier_spacing,
+                guard_time,
+                modulation_order,
+                coding_rate,
+                num_symbols
+            }),
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            displayResults('ofdm-results', data);
+        } else {
+            showError('ofdm-results', data.error || 'An unknown error occurred.');
+        }
+    } catch (error) {
+        showError('ofdm-results', 'Network error or server unreachable: ' + error.message);
+    }
+}
+
+        async function calculateCellular() {
+            showLoading('cellular-results');
+            const coverage_area = parseFloat(document.getElementById('cell-coverage').value);
+            const users_per_km2 = parseFloat(document.getElementById('cell-user-density').value);
+            const traffic_per_user = parseFloat(document.getElementById('cell-traffic').value);
+            const blocking_probability = parseFloat(document.getElementById('cell-blocking').value);
+            const frequency_reuse = parseInt(document.getElementById('cell-reuse').value);
+            const cell_radius = parseFloat(document.getElementById('cell-radius').value);
+
+            try {
+                const response = await fetch('/api/cellular-design', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ coverage_area, users_per_km2, traffic_per_user, blocking_probability, frequency_reuse, cell_radius }),
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResults('cellular-results', data);
+                } else {
+                    showError('cellular-results', data.error || 'An unknown error occurred.');
+                }
+            } catch (error) {
+                showError('cellular-results', 'Network error or server unreachable: ' + error.message);
+            }
+        }
+
+        async function calculateCellularCapacity() {
+    showLoading('cellular-results');
+
+    const area = parseFloat(document.getElementById('cell-area').value);
+    const radius = parseFloat(document.getElementById('cell-radius').value);
+    const reuse = parseInt(document.getElementById('cell-reuse').value);
+    const spectrum = parseFloat(document.getElementById('cell-spectrum').value);
+    const channel_bw = parseFloat(document.getElementById('channel-bandwidth').value);
+    const gos = parseFloat(document.getElementById('gos').value);
+    const traffic_per_user = parseFloat(document.getElementById('traffic-user').value);
+
+    try {
+        const response = await fetch('/api/cellular-capacity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ area, radius, reuse, spectrum, channel_bw, gos, traffic_per_user })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            displayResults('cellular-results', data);
+        } else {
+            showError('cellular-results', data.error || 'An error occurred.');
+        }
+    } catch (error) {
+        showError('cellular-results', 'Error: ' + error.message);
+    }
+}
+
+
+function displayResults(resultsId, data) {
+    const resultsDiv = document.getElementById(resultsId);
+    let html = '<h3>📊 Calculation Results</h3>';
+
+    // Display numerical results with units
+    Object.keys(data).forEach(key => {
+        if (key !== 'ai_explanation' && key !== 'formulas' && key !== 'symbol_duration' && key !== 'guard_time') {
+            const value = data[key];
+
+            // Handle both numbers and strings
+            if (typeof value === 'number') {
+                const unit = getUnit(key);
+                const displayValue = value % 1 === 0 ? value.toString() : value.toFixed(6);
+                html += `<div class="result-item">
+                            <span class="result-label">${formatKey(key)}:</span>
+                            <span class="result-value">${displayValue} ${unit}</span>
+                        </div>`;
+            } else if (typeof value === 'string' && !isNaN(parseFloat(value.split(' ')[0]))) {
+                // Handle string values that contain numbers (like "0.0833 ms")
+                html += `<div class="result-item">
+                            <span class="result-label">${formatKey(key)}:</span>
+                            <span class="result-value">${value}</span>
+                        </div>`;
+            }
+        }
+    });
+
+    // Display formulas if available
+    if (data.formulas) {
+        html += '<h4>📐 Formulas Used:</h4>';
+        Object.keys(data.formulas).forEach(key => {
+            html += `<p><strong>${formatKey(key)}:</strong> ${data.formulas[key]}</p>`;
+        });
+    }
+
+    // Display AI explanation
+    if (data.ai_explanation) {
+        html += `<div class="ai-explanation">
+                    <h4>🤖 AI Explanation:</h4>
+                    <p>${data.ai_explanation}</p>
+                </div>`;
+    }
+
+    resultsDiv.innerHTML = html;
+    resultsDiv.classList.add('show');
+}
+
+
+
+
+function formatKey(key) {
+    return key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').replace(/^./, function(str){ return str.toUpperCase(); });
+}
+        // Initial setup to show the default scenario
+        document.addEventListener('DOMContentLoaded', () => {
+            showScenario('link-budget', document.querySelector('.tab.active'));
+        });
+    </script>
+
+
+
+</body>
+</html>
